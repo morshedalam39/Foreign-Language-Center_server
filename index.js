@@ -36,17 +36,19 @@ dbConnect();
 
 const usersCollection = client.db("21-Language").collection("users");
 const classesCollection = client.db("21-Language").collection("classes");
+const selectedCollection = client.db("21-Language").collection("selectedClass");
 
 app.get("/", (req, res) => {
   res.send("Learn Language");
 });
 
 // users related apis
+// get all user
 app.get("/users", async (req, res) => {
   const result = await usersCollection.find().toArray();
   res.send(result);
 });
-
+// get role user
 app.get("/role", async (req, res) => {
   const email = req.query?.email;
   console.log(email);
@@ -57,7 +59,7 @@ app.get("/role", async (req, res) => {
     res.send({});
   }
 });
-
+// post user
 app.post("/users", async (req, res) => {
   const user = req.body;
   const query = { email: user.email };
@@ -71,7 +73,7 @@ app.post("/users", async (req, res) => {
   const result = await usersCollection.insertOne(user);
   res.send(result);
 });
-
+// set user Role
 app.patch("/users/:id", async (req, res) => {
   const id = req.params.id;
   const body = req.body;
@@ -85,7 +87,6 @@ app.patch("/users/:id", async (req, res) => {
   const result = await usersCollection.updateOne(quary, updateDoc, options);
   res.send(result);
 });
-
 
 
 
