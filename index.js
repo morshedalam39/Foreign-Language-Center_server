@@ -145,11 +145,21 @@ app.get('/approveClass', async (req, res)=>{
 })
 
 // student related api
-
-app.post('selectedClass', async (req,res)=>{
+// post class
+app.post('/selectedClass', async (req,res)=>{
   const body= req.body;
   const result =await selectedCollection.insertOne(body)
   res.send(result)
+})
+
+// get classes for my selected classes
+app.get('/selectedClass/:email', async (req, res)=>{
+  const email=req.params.email;
+  const q1={studentEmail :email};
+  const q2= {payment :false};
+  const result= await selectedCollection.find({$and :[q1,q2]}).toArray(
+    res.send(result)
+  )
 })
 
 app.listen(port, () => {
