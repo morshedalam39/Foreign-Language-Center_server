@@ -89,6 +89,54 @@ app.patch("/users/:id", async (req, res) => {
 });
 
 
+// classes related apis
+// post a class for add class
+app.post('/class', async (req, res)=>{
+  const body=req.body
+  const result=await classesCollection.insertOne(body)
+  res.send(result)
+})
+//  get email base class for my class
+app.get('/class/:email', async (req, res) => {
+  const email = req.params.email;
+  const q = {instructorEmail: email };
+  const result = await classesCollection.find(q).toArray();
+  res.send(result);
+});
+
+// get all class for managed user
+app.get('/class', async (req, res)=>{
+  const finds = classesCollection.find()
+  const result= await finds.toArray()
+  res.send(result)
+})
+
+// update api
+app.put('/singleClass/:id', async (req, res)=>{
+  const id =req.params.id
+  const q={_id: new ObjectId(id)}
+  const body =req.body
+  const options={upsert: true}
+  const updateDoc={
+    $set: body,
+
+  }
+  const result= await classesCollection.updateOne(q, updateDoc, options)
+  res.send(result)
+})
+
+app.get('/classSingle/:id', async (req,res)=>{
+  const id =req.params.id
+  const q={_id: new ObjectId(id)}
+  const result = await classesCollection.findOne(q)
+  if(result){
+    res.send(result)
+  }
+  else{
+    res.send({})
+  }
+})
+
 
 
 app.listen(port, () => {
