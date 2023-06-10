@@ -153,13 +153,19 @@ app.post('/selectedClass', async (req,res)=>{
 })
 
 // get classes for my selected classes
-app.get('/selectedClass/:email', async (req, res)=>{
-  const email=req.params.email;
-  const q1={studentEmail :email};
-  const q2= {payment :false};
-  const result= await selectedCollection.find({$and :[q1,q2]}).toArray(
-    res.send(result)
-  )
+app.get('/selectedClass/:email', async (req, res) => {
+  const email = req.params.email;
+  const q1 = { studentEmail: email };
+  const q2 = { payment: false };
+  const result = await selectedCollection.find({ $and: [q1, q2] }).toArray();
+  res.send(result);
+});
+
+app.delete('/selectedClass/:id',  async(req,res)=>{
+  const id=req.params.id;
+  const q={_id: new ObjectId(id)}
+  const result =await selectedCollection.deleteOne(q)
+  res.send(result)
 })
 
 app.listen(port, () => {
