@@ -137,7 +137,16 @@ app.get('/classSingle/:id', async (req,res)=>{
   }
 })
 
+// get all approved class for classes page
+app.get('/approveClass', async (req, res)=>{
+  const q ={status: 'approve'}
+  const result = await classesCollection.find(q).toArray()
+  res.send(result)
+})
 
+// student related api
+
+app.post('selectedClass', async (req,res)=>{})
 
 app.listen(port, () => {
   console.log(`Learn Language is Process on ${port}`);
