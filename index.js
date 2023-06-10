@@ -168,6 +168,15 @@ app.delete('/selectedClass/:id',  async(req,res)=>{
   res.send(result)
 })
 
+
+app.get('/instructor', async (req, res)=>{
+  const q ={role: 'instractor'}
+  const result = await usersCollection.find(q).toArray()
+  res.send(result)
+})
+
+
+
 app.listen(port, () => {
   console.log(`Learn Language is Process on ${port}`);
 });
