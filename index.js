@@ -146,7 +146,11 @@ app.get('/approveClass', async (req, res)=>{
 
 // student related api
 
-app.post('selectedClass', async (req,res)=>{})
+app.post('selectedClass', async (req,res)=>{
+  const body= req.body;
+  const result =await selectedCollection.insertOne(body)
+  res.send(result)
+})
 
 app.listen(port, () => {
   console.log(`Learn Language is Process on ${port}`);
