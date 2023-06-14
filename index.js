@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const app = express();
 const cors = require("cors");
+const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY)
 const port = process.env.PORT || 5000;
@@ -9,6 +10,29 @@ const port = process.env.PORT || 5000;
 // middleware
 app.use(cors());
 app.use(express.json());
+
+
+const verifyJWT = (req, res, next) => {
+  const authorization = req.headers.authorization;
+  console.log(authorization);
+  if (!authorization) {
+    return res.status(401).send({ error: true, message: 'unauthorized access' });
+  }
+  // bearer token
+  const token = authorization.split(' ')[1];
+  console.log(token);
+
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+    console.log(decoded);
+    if (err) {
+      console.log(err);
+      return res.status(401).send({ error: true, message: 'unauthorized access' })
+    }
+    req.decoded = decoded;
+    next();
+  })
+}
+
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.phc1bhb.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -33,6 +57,15 @@ async function run() {
       .collection("selectedClass");
     const paymentCollection = client.db("21-Language").collection("payments");
 
+
+    app.post('/jwt', (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h'})
+
+      res.send({ token })
+    })
+
+
     // users related apis
     // get all user
     app.get("/users", async (req, res) => {
@@ -40,7 +73,7 @@ async function run() {
       res.send(result);
     });
     // get role user
-    app.get("/role", async (req, res) => {
+    app.get("/role", verifyJWT,  async (req, res) => {
       const email = req.query?.email;
       console.log(email);
       const role = await usersCollection.findOne({ email: email });
@@ -139,7 +172,7 @@ async function run() {
     });
 
     // get classes for my selected classes
-    app.get("/selectedClass/:email", async (req, res) => {
+    app.get("/selectedClass/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
       const q1 = { studentEmail: email };
       const q2 = { payment: false };
@@ -149,7 +182,7 @@ async function run() {
       res.send(result);
     });
     // selected class delete api
-    app.delete("/selectedClass/:id", async (req, res) => {
+    app.delete("/selectedClass/:id", verifyJWT, async (req, res) => {
       const id = req.params.id;
       const q = { _id: new ObjectId(id) };
       const result = await selectedCollection.deleteOne(q);
@@ -198,6 +231,8 @@ async function run() {
       });
     });
 
+     // get singel class for payment
+
     app.get("/singleSelect/:id", async (req, res) => {
       const id = req.params.id;
       const q = { _id: new ObjectId(id) };
@@ -208,6 +243,8 @@ async function run() {
         res.send({});
       }
     });
+
+   
     app.put("/singleSelect/:id", async (req, res) => {
       const id = req.params.id;
       const q = { _id: new ObjectId(id) };
@@ -220,6 +257,7 @@ async function run() {
       res.send(result);
     });
 
+    // post payment history
     app.post("/paymentHistory", async (req, res) => {
       const body = req.body;
       const result = await paymentCollection.insertOne(body);
@@ -228,11 +266,23 @@ async function run() {
 
 
     // get Enrolled class
-    app.get("/enrolledClass", async (req, res) => {
-      const finds = paymentCollection.find();
+    app.get("/enrolledClass/:email", async (req, res) => {
+      const email = req.params.email;
+      const q= {email:email}
+      const finds = paymentCollection.find(q);
       const result = await finds.toArray();
       res.send(result);
     });
+    // get payment history
+    app.get("/paymentHistory/:email", async (req, res) => {
+      const email = req.params.email;
+      const q= {email:email}
+      const finds = await paymentCollection.find(q).sort({date:  -1})
+      const result = await finds.toArray();
+      res.send(result);
+    });
+
+    
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
